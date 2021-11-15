@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+        TEMAS (API 21+)
+    -->
+
+<!--    <style name="Radios" parent="MiTema">-->
+<!--        <item name="android:statusBarColor">?attr/colorPrimary</item>-->
+<!--        <item name="android:navigationBarColor">?attr/colorSecondaryVariant</item>-->
+<!--    </style>-->
+
+<!--    <style name="Radios.Inicio" parent="MiTema.Inicio">-->
+<!--        <item name="android:statusBarColor">?attr/colorSecondaryVariant</item>-->
+<!--        <item name="android:navigationBarColor">?attr/colorSecondaryVariant</item>-->
+<!--    </style>-->
+
+    <!-- Clicable Circular -->
+    <style name="EstiloClicables">
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+    </style>
+
+
+    <!-- Notificación -->
+    <style name="EstiloTextoPrimarioNoti" parent="android:TextAppearance.Material.Notification.Title"/>
+
+    <style name="EstiloTextoSecundarioNoti" parent="android:TextAppearance.Material.Notification.Line2"/>
+
+    <style name="EstiloTextoTerciarioNoti" parent="EstiloTextoSecundarioNoti"/>
+
+    <style name="EstiloBotonPrimarioNoti" parent="android:Widget.ImageButton">
+        <item name="android:background">?android:attr/selectableItemBackgroundBorderless</item>
+    </style>
+
+    <style name="EstiloBotonSecundarioNoti" parent="EstiloBotonPrimarioNoti"/>
+
+</resources>

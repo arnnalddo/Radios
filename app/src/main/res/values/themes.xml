@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <style name="Radios" parent="MiTema"/>
+    <style name="Radios.Inicio" parent="MiTema.Inicio"/>
+
+    <!-- Base application theme. -->
+    <style name="MiTema" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primaryVariant</item>
+        <item name="colorOnPrimary">@color/onPrimary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondaryVariant</item>
+        <item name="colorOnSecondary">@color/onSecondary</item>
+        <item name="android:windowBackground">@color/primary</item>
+        <!--<item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>-->
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/primary</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/secondaryVariant</item>
+
+        <item name="android:typeface">normal</item>
+        <item name="android:fontFamily">@string/font_family_body_1_material</item>
+        <item name="windowActionModeOverlay">true</item>
+
+        <item name="fondoTip">@drawable/fondo_tip</item>
+        <item name="divisor">@drawable/divisor</item>
+        <item name="estiloClicables">@style/EstiloClicables</item>
+        <item name="estiloItemLista">@style/EstiloItemLista</item>
+
+        <item name="textAppearanceHeadline2">@style/TextAppearance.MaterialComponents.Headline2</item>
+        <item name="textAppearanceHeadline3">@style/TextAppearance.MaterialComponents.Headline3</item>
+        <item name="textAppearanceHeadline4">@style/TextAppearance.MaterialComponents.Headline4</item>
+        <item name="textAppearanceHeadline5">@style/TextAppearance.MaterialComponents.Headline5</item>
+        <item name="textAppearanceHeadline6">@style/TextAppearance.MaterialComponents.Headline6</item>
+        <item name="textAppearanceSubtitle1">@style/TextAppearance.MaterialComponents.Subtitle1</item>
+        <item name="textAppearanceSubtitle2">@style/TextAppearance.MaterialComponents.Subtitle2</item>
+        <item name="textAppearanceBody1">@style/TextAppearance.MaterialComponents.Body1</item>
+        <item name="textAppearanceBody2">@style/TextAppearance.MaterialComponents.Body2</item>
+        <item name="textAppearanceCaption">@style/TextAppearance.MaterialComponents.Caption</item>
+        <item name="textAppearanceOverline">@style/TextAppearance.MaterialComponents.Overline</item>
+    </style>
+
+    <style name="MiTema.Inicio" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/secondary</item>
+        <item name="colorPrimaryVariant">@color/secondary</item>
+        <item name="colorOnPrimary">@color/onPrimary</item>
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondaryVariant</item>
+        <item name="colorOnSecondary">@color/onSecondary</item>
+        <item name="android:windowBackground">@color/primary</item>
+        <!--<item name="android:windowTranslucentStatus" tools:targetApi="kitkat">true</item>-->
+        <item name="android:statusBarColor" tools:targetApi="lollipop">@color/primary</item>
+        <item name="android:navigationBarColor" tools:targetApi="lollipop">@color/primary</item>
+    </style>
+
+    <!-- Notificacion -->
+    <style name="EstiloTextoPrimarioNoti" parent="TextAppearance.Compat.Notification.Title"/>
+
+    <style name="EstiloTextoSecundarioNoti" parent="TextAppearance.Compat.Notification.Line2"/>
+
+    <style name="EstiloTextoTerciarioNoti" parent="EstiloTextoSecundarioNoti"/>
+
+    <style name="EstiloBotonPrimarioNoti" parent="Widget.AppCompat.ImageButton">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <style name="EstiloBotonSecundarioNoti" parent="EstiloBotonPrimarioNoti"/>
+
+    <!-- Clicable Cuadrado -->
+    <style name="EstiloClicables">
+        <item name="android:background">?android:attr/selectableItemBackground</item>
+    </style>
+
+    <!-- Item Lista -->
+    <style name="EstiloItemLista">
+        <item name="android:paddingLeft">@dimen/margenLista</item>
+        <item name="android:paddingRight">@dimen/margenLista</item>
+        <item name="android:paddingTop">@dimen/margenLista</item>
+        <item name="android:paddingBottom">@dimen/margenLista</item>
+        <item name="android:minHeight">24dp</item>
+    </style>
+
+    <style name="AnimAlerta">
+        <item name="android:windowEnterAnimation">@anim/popup_in</item>
+        <item name="android:windowExitAnimation">@anim/popup_out</item>
+    </style>
+
+</resources>

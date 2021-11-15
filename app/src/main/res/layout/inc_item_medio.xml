@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <!--Divisor-->
+    <View
+        android:id="@+id/divisor"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/grosorDiv"
+        android:background="?attr/divisor"/>
+
+    <!--Contenedor principal-->
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        style="?attr/estiloItemLista">
+
+        <!--Logo-->
+        <ImageView
+            android:id="@+id/imagenMedio"
+            android:contentDescription="@string/logo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_marginEnd="16dp"
+            android:scaleType="fitCenter" />
+
+        <!--Nombre medio-->
+        <TextView
+            android:id="@+id/nombreMedio"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textAppearance="?attr/textAppearanceBody1"
+            android:textColor="?android:attr/textColorPrimary"
+            android:maxLines="1"/>
+
+    </LinearLayout>
+
+</LinearLayout>

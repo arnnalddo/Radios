@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.arnnalddo.radios">
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" /><!--Android 9 (Pie) requiere este permiso-->
+
+    <application
+        android:allowBackup="true"
+        android:fullBackupContent="@xml/backup"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/appNombre"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Radios">
+
+        <!-- Habilitar modo multiventana -->
+        <meta-data android:name="com.sec.android.support.multiwindow" android:value="true"/>
+
+        <!-- Habilitar modo multiventana en dispositivos Samsung -->
+        <meta-data android:name="com.samsung.android.sdk.multiwindow.enable" android:value="true" />
+
+        <!-- En LG modo "split window" -->
+        <meta-data android:name="com.lge.support.SPLIT_WINDOW" android:value="true" />
+
+        <!-- Actividad Inicio -->
+        <activity
+            android:name="com.arnnalddo.radios.ActiInicio"
+            android:label="@string/appNombre"
+            android:launchMode="singleTop"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@style/Radios.Inicio"
+            android:exported="true">
+
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER"/>
+            </intent-filter>
+
+        </activity>
+
+        <!-- Actividad Principal -->
+        <activity
+            android:name="com.arnnalddo.radios.ActiPrincipal"
+            android:launchMode="singleTask"
+            android:label="@string/appNombre"
+            android:configChanges="orientation|keyboardHidden|screenSize"/>
+
+        <!-- Servicio principal (Reproductor) -->
+        <service android:name="com.arnnalddo.radios.MediaService"
+            android:exported="false"
+            android:description="@string/descripcion_mediaservice"/>
+
+        <!-- MediaReceiver (para botones de auriculares, etc.) -->
+        <receiver android:name="com.arnnalddo.radios.MediaReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON" />
+            </intent-filter>
+        </receiver>
+
+    </application>
+
+</manifest>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="fondoTip" format="reference" />
+    <attr name="colorDiv" format="reference" />
+    <attr name="divisor" format="reference" />
+    <attr name="estiloClicables" format="reference" />
+    <attr name="estiloItemLista" format="reference" />
+</resources>

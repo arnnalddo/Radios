@@ -1,0 +1,223 @@
+<resources>
+
+    <!-- CONFIGURACIONES PRINCIPALES -->
+    <bool name="appConfigModoPrueba">true</bool><!-- "true" para no inicializar Firebase ni cargar publicidad real -->
+    <string name="appNombre" translatable="false">Radios</string><!-- Nombre de la app -->
+    <string name="appURIConfig" translatable="false">https://elasticbeanstalk-sa-east-1-106826202177.s3.sa-east-1.amazonaws.com/config.jsonp</string>
+    <string name="appURIConfigAlt" translatable="false">http://lab.arnaldoalfredo.com/radioapp/config.jsonp</string>
+    <string name="appURICorreo" translatable="false">http://www.arnaldoalfredo.com/radioapp/mensaje.php</string>
+    <string name="appURIISP" translatable="false">http://lab.arnnalddo.com/radioapp/isp.php</string>
+    <string name="appURILegal" translatable="false">http://lab.arnnalddo.com/radioapp/legal/</string><!-- URL legales -->
+    <string name="appURISpotifyToken" translatable="false">http://metadatos-env-1.eba-nty8zymq.sa-east-1.elasticbeanstalk.com/token.php</string>
+    <string name="appURISpotifySearch" translatable="false">https://api.spotify.com/v1/search/</string>
+    <string name="appIDMobileAds" translatable="false">ca-app-pub-6366159722927063~4009987431</string>
+    <string name="EUConsentPubID" translatable="false">pub-xxx</string>
+
+    <string name="idBannerInferior1" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="idBannerInferior2" translatable="false">ca-app-pub-3940256099942544/6300978111</string>
+    <string name="idIntersticial1" translatable="false">ca-app-pub-3940256099942544/1033173712</string>
+    <string name="idDispositivoPrueba" translatable="false">XXXXXXXXXXXXXXXXXX</string>
+    <string name="facebook_app_id" translatable="false">XXX</string>
+
+    <!-- CADENAS TRADUCIBLES -->
+
+    <!-- Tiempo -->
+    <string name="tiempo_hora">h</string>
+    <string name="tiempo_min">min</string>
+    <string name="tiempo_seg">s</string>
+
+    <!-- Dias -->
+    <string name="dia_dom">Domingo</string>
+    <string name="dia_lun">Lunes</string>
+    <string name="dia_mar">Martes</string>
+    <string name="dia_mie">Miércoles</string>
+    <string name="dia_jue">Jueves</string>
+    <string name="dia_vie">Viernes</string>
+    <string name="dia_sab">Sábado</string>
+
+    <!-- Meses -->
+    <string name="mes_ene">Enero</string>
+    <string name="mes_feb">Febrero</string>
+    <string name="mes_mar">Marzo</string>
+    <string name="mes_abr">Abril</string>
+    <string name="mes_may">Mayo</string>
+    <string name="mes_jun">Junio</string>
+    <string name="mes_jul">Julio</string>
+    <string name="mes_ago">Agosto</string>
+    <string name="mes_sep">Septiembre</string>
+    <string name="mes_oct">Octubre</string>
+    <string name="mes_nov">Noviembre</string>
+    <string name="mes_dic">Diciembre</string>
+
+
+    <!-- Menu -->
+    <string name="menu_escuchar">Reproduciendo</string>
+    <string name="menu_galeria">Galería</string>
+    <string name="menu_fotos">Fotos</string>
+    <string name="menu_videos">Vídeos</string>
+    <string name="menu_programacion">Programación</string>
+    <string name="menu_programas">Programas</string>
+    <string name="menu_noticias">Noticias</string>
+    <string name="menu_novedades">Novedades</string>
+    <string name="menu_eventos">Eventos</string>
+    <string name="menu_contacto">Mensajes</string>
+    <string name="menu_config">ajustes</string>
+    <string name="menu_info">acerca de</string>
+    <string name="menu_salir">Salir</string>
+    <string name="menu_medios">listado de medios</string>
+    <string name="menu_cotizaciones">cotización de monedas</string>
+    <string name="menu_clima">el clima</string>
+    <string name="menu_horoscopo">horóscopo del día</string>
+    <string name="menu_cine">cartelera de cine</string>
+    <string name="menu_futbol">fútbol nacional</string>
+
+    <!-- Formulario -->
+    <string name="nombre">Nombre</string>
+    <string name="pais_ciudad">País/Ciudad</string>
+    <string name="mensaje">Mensaje</string>
+    <string name="enviar_mensaje">Enviar →</string>
+    <string name="error_m1">Por favor, complete todos los campos obligatorios.</string>
+    <string name="error_m2">Por favor, ingrese su nombre real.</string>
+    <string name="error_m3">Por favor, verifique su dirección de correo electrónico.</string>
+    <string name="error_m4">Debe escribir un mensaje de al menos 10 caracteres.</string>
+    <string name="enviando_mensaje">Enviando mensaje&#8230;</string>
+    <string name="listo">Listo</string>
+    <string name="mensaje_enviado">Mensaje enviado exitosamente.</string>
+    <string name="mensaje_noenviado">No se ha podido enviar el mensaje.</string>
+
+    <!-- Estados y mensajes -->
+    <string name="reproductor_principal">Reproductor de audio</string>
+    <string name="controles_msj">Toque Play para escuchar</string>
+    <string name="cargando_msj">Cargando</string>
+    <string name="conectando_msj">Conectando…</string>
+    <string name="demora_msj">Esto podría demorar varios minutos…</string>
+    <string name="almacenando_msj">Almacenando en búfer…</string>
+    <string name="reproduciendo_msj">Reproduciendo</string>
+    <string name="envivo_msj">En vivo</string>
+    <string name="prog_grabados_msj">Programas grabados</string>
+    <string name="desconectado_msj">Desconectado</string>
+    <string name="escuchas_msj">Estás escuchando</string>
+    <string name="final_reproduccion_msj">Reproducción finalizada</string>// Cuando no es en vivo
+    <string name="final_archivo_msj">Final del archivo inesperado</string>// Cuando es en vivo
+    <string name="logo">Logo</string>
+    <string name="reproducir_detener">Reproducir/Detener</string>
+    <string name="reproducir_pausar">Reproducir/Pausar</string>
+    <string name="reproducir">Reproducir</string>
+    <string name="detener">Detener</string>
+    <string name="pausar">Pausar</string>
+    <string name="abrir">Abrir</string>
+    <string name="cerrar">Cerrar</string>
+    <string name="aceptar">Aceptar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="reintentar">Reintentar</string>
+    <string name="compartir">Compartir</string>
+    <string name="atencion">Atención</string>
+    <string name="error">Error</string>
+    <string name="error_conexion">Error de conexión</string>
+    <string name="error_desconocido">Puede que el archivo ya no esté disponible, que haya cambiado de nombre o que haya algún error en la red.</string>
+    <string name="error_red_no_disponible">Red no disponible.</string>
+    <string name="error_verificar_conexion">Por favor, verifique su conexión a Internet.</string>
+    <string name="error_json_txt">No se ha podido descargar el archivo de configuración.</string>
+    <string name="error_carga_contenido">Error al cargar el contenido</string>
+    <string name="atencion_salir_txt">Está a punto de salir de esta aplicación.</string>
+    <string name="nodisponible_txt">No disponible</string>
+    <string name="desactivado_txt">Desactivado</string>
+    <string name="nunca_txt">Nunca</string>
+    <string name="despues_de_txt">Después de</string>
+    <string name="mostrar_menu">Mostrar Menú</string>
+    <string name="ocultar_menu">Ocultar Menú</string>
+    <string name="mas">Más</string>
+
+    <!-- Otros textos -->
+    <string name="tit_infoApp">La aplicación</string>
+    <string name="version_txt">Versión</string>
+    <string name="desarrollo_txt">Creada por</string>
+    <string name="tit_infoStream">Streaming</string>
+    <string name="infoContacto_txt">Información de contacto</string>
+    <string name="direccion_txt">Dirección</string>
+    <string name="telefono_txt">Teléfono(s)</string>
+    <string name="correo_txt">Correo electrónico</string>
+    <string name="sitio_txt">Visitar el portal →</string>
+    <string name="tit_autoplay">Reproducción automática</string>
+    <string name="tit_autostop">Detención automática</string>
+    <string name="tit_detener_audifono">Detectar auriculares</string>
+    <string name="tit_anim">Animaciones</string>
+    <string name="tit_modo_nocturno">Tema oscuro</string>
+    <string name="txt_detener_audifono">Detener reproducción al desconectar el auricular</string>
+    <string name="des_autoplay">Al abrir la aplicación, reproducir automáticamente el último medio seleccionado</string>
+    <string name="des_anim">Activar o desactivar las animaciones</string>
+    <string name="tit_notifi">Notificaciones push</string>
+    <string name="tit_video">Vídeo</string>
+    <string name="vol_desc">Vol:</string>
+    <string name="descripcion_mediaservice">Permite la reproducción y control de audio en segundo plano.</string>
+    <string name="descripcion_messagingservice">Permite la recepción de Notificaciones Push.</string>
+    <string name="des_cerrar_app">Botón cerrar aplicación</string>
+    <string name="des_control">Botón iniciar o detener reproducción</string>
+    <string name="des_imagen">Imagen</string>
+    <string name="veren_gp">Ver en la tienda →</string>
+    <string name="politica_txt">Información legal</string>
+    <string name="licencia_txt">Licencias de código abierto</string>
+    <string name="reportar_error_txt">Reportar un error</string>
+    <string name="des_grab">Grabación del</string>
+    <string name="tit_actualizacion">Nueva versión disponible</string>
+    <string name="txt_actualizacion">Hay una nueva versión de esta aplicación en la tienda. ¿Desea actualizarla?</string>
+    <string name="actualizar">Actualizar ahora</string>
+    <string name="no_gracias">No, gracias</string>
+    <string name="mas_tarde">Más tarde</string>
+    <string name="no_mostrar_de_nuevo">No mostrar de nuevo</string>
+    <string name="menu_enviar_mensajes">Enviar mensajes</string>
+    <string name="menu_escuchar_grabados">Escuchar programas grabados</string>
+    <string name="menu_ver_envivo">Ver en directo</string>
+    <string name="tip_lista">Mantenga presionado un ítem de la lista para ver más opciones.</string>
+    <string name="buscar">Buscar</string>
+    <string name="de_txt">De</string>
+    <string name="para_txt">Para</string>
+    <string name="radios_de">Radios de</string>
+    <string name="radios_online">Radios Online</string>
+    <string name="entiendo">Entiendo</string>
+    <string name="modo_ahorro_tit">Uso limitado</string>
+    <string name="modo_ahorro_txt">Desactive el Modo Ahorro de energía</string>
+    <string name="powerSaver">Por favor, desactive el Modo ahorro de energía si encuentra problemas con esta aplicación</string>
+    <string name="error_video">No se puede reproducir el vídeo</string>
+    <string name="por">por</string>
+    <string name="des_noti_reproduccion">Muestra información multimedia</string>
+    <string name="des_noti_modo_ahorro">Cuando active el modo ahorro de energía, verá esta notificación</string>
+    <string name="des_noti_push">Notificaciones push</string>
+    <string name="des_noti_seleccionar">Seleccione un medio de la lista principal para empezar</string>
+
+
+    <string name="compra">Compra</string>
+    <string name="venta">Venta</string>
+
+    <string name="humedad">Humedad</string>
+    <string name="sensacion">Sensación</string>
+    <string name="viento">Viento</string>
+    <string name="amanecer">Amanecer</string>
+    <string name="puesta_sol">Atardecer</string>
+    <string name="ultima_actualizacion">Última actualización</string>
+    <string name="pronostico">Pronóstico</string>
+
+    <string name="puntaje">Puntaje</string>
+
+    <string name="reproduccion">Reproducción</string>
+    <string name="restablecer">Restablecer</string>
+
+
+    <!-- CADENAS NO TRADUCIBLES -->
+    <string name="facebook" translatable="false">Facebook</string>
+    <string name="twitter" translatable="false">Twitter</string>
+    <string name="instagram" translatable="false">Instagram</string>
+    <string name="font_family_body_1_material" translatable="false">sans-serif</string>
+    <string name="tema_oscuro" translatable="false">oscuro</string>
+    <string name="tema_claro" translatable="false">claro</string>
+    <string name="tema_cool" translatable="false">cool</string>
+    <string name="tema_cool_claro" translatable="false">cool_claro</string>
+    <string name="tema_pro" translatable="false">pro</string>
+    <string name="tema_pro_claro" translatable="false">pro_claro</string>
+    <string name="tema_pro_bi" translatable="false">pro_bi</string>
+    <string name="tema_pro_claro_bi" translatable="false">pro_claro_bi</string>
+    <string name="fuente_regular" translatable="false">fuentes/DMSans-Regular.ttf</string>
+    <string name="fuente_negrita" translatable="false">fuentes/Baloo2-Bold.ttf</string>
+    <string name="credito" translatable="false">arnnalddo@icloud.com</string>
+
+</resources>

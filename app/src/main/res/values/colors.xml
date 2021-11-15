@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#151515</color><!-- Barra de herramientas no alfa -->
+    <color name="primaryVariant">#333333</color><!-- Barra de herramientas no alfa -->
+    <color name="onPrimary">#eeeeee</color><!-- Barra de herramientas no alfa -->
+    <color name="secondary">#546e7a</color><!-- Barra de herramientas no alfa -->
+    <color name="secondaryVariant">#546e7a</color><!-- Barra de herramientas no alfa -->
+    <color name="onSecondary">#ffffff</color><!-- Barra de herramientas no alfa -->
+</resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_gravity="center">
+
+    <!--Rueda-->
+    <com.google.android.material.progressindicator.CircularProgressIndicator
+        android:id="@+id/ruedaCentro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:contentDescription="@string/cargando_msj"
+        android:indeterminate="true"
+        android:visibility="invisible"
+        app:trackCornerRadius="@dimen/radioBordeGrande" />
+
+    <!--Texto error-->
+    <TextView
+        android:id="@+id/txtCentro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:maxWidth="300dp"
+        android:text="@string/error_carga_contenido"
+        android:textAppearance="?attr/textAppearanceSubtitle2"
+        android:visibility="invisible" />
+
+    <!--Botón reintentar-->
+    <Button
+        android:id="@+id/btnCentro"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/txtCentro"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="24dp"
+        android:text="@string/reintentar"
+        android:visibility="invisible"
+        style="?attr/materialButtonStyle"/>
+
+</RelativeLayout>

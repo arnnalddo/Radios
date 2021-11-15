@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/contenedorActualizar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_horizontal"
+    android:orientation="vertical">
+
+    <!--Título-->
+    <TextView
+        android:id="@+id/tituloActualizar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:gravity="center_horizontal"
+        android:text="@string/tit_actualizacion"
+        android:textAppearance="?attr/textAppearanceHeadline5"
+        android:textColor="@android:color/white" />
+
+    <!--Descripción-->
+    <TextView
+        android:id="@+id/descripcionActualizar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:gravity="center_horizontal"
+        android:text="@string/txt_actualizacion"
+        android:textAppearance="?attr/textAppearanceBody2"
+        android:textColor="@android:color/white" />
+
+    <!--Botón para actualizar-->
+    <Button
+        android:id="@+id/botonActualizarAhora"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:minWidth="200dp"
+        android:text="@string/actualizar" />
+
+    <!--Botón para ignorar actualización-->
+    <Button
+        android:id="@+id/botonActualizarDespues"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:minWidth="200dp"
+        android:text="@string/mas_tarde"
+        style="?attr/materialButtonOutlinedStyle"/>
+
+</LinearLayout>

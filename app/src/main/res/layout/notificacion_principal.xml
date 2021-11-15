@@ -1,0 +1,80 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/fondoNotificacion"
+    android:layout_width="match_parent"
+    android:layout_height="64dp"
+    android:background="#FF222222"
+    android:baselineAligned="false"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <!--Imagen-->
+    <ImageView
+        android:id="@+id/imagenNotificacion"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:contentDescription="@string/des_imagen"
+        android:padding="8dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/no_logo" />
+
+    <!--Título y subtítulo-->
+    <LinearLayout
+        android:id="@+id/textosNotificacion"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
+
+        <!--Título-->
+        <TextView
+            android:id="@+id/tituloNotificacion"
+            style="@style/EstiloTextoPrimarioNoti"
+            android:textColor="#FFFFFFFF"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1" />
+
+        <!--Subtítulo-->
+        <TextView
+            android:id="@+id/subtituloNotificacion"
+            style="@style/EstiloTextoSecundarioNoti"
+            android:textColor="#FFCCCCCC"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxLines="1" />
+
+    </LinearLayout>
+
+    <!--Acciones-->
+    <LinearLayout
+        android:id="@+id/controles_notificacion"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <!--Botón Play/Stop (se colorea dinamicamente)-->
+        <ImageButton
+            android:id="@+id/botonPlayNotificacion"
+            style="@style/EstiloBotonPrimarioNoti"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/des_control"
+            android:paddingTop="23.5dp"
+            android:paddingBottom="23.5dp"
+            android:scaleType="fitCenter"
+            android:src="@drawable/ic_play" />
+
+        <!--Botón cerrar (se colorea dinamicamente)-->
+        <ImageButton
+            android:id="@+id/botonCerrarNotificacion"
+            style="@style/EstiloBotonSecundarioNoti"
+            android:layout_width="48dp"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/des_cerrar_app"
+            android:scaleType="center"
+            android:src="@drawable/ic_close_white_24dp" />
+
+    </LinearLayout>
+
+</LinearLayout>
