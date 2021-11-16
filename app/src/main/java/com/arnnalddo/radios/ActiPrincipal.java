@@ -21,65 +21,15 @@ import androidx.fragment.app.FragmentTransaction;
  * Actividad principal
  */
 public class ActiPrincipal extends AppCompatActivity {
-    
-    // Otros
+    //
+    // PROPIEDADES
+    //**********************************************************************************************
     private Intent iServicio;
     private boolean mBound = false;
     private String urlMedios;
-    
-    /**
-     * Manejar la intent
-     */
-    private void manejarIntent(Intent i) {
-        if (i != null) {
-            if (i.getExtras() != null) {
-                Bundle extra = i.getExtras();
-                if (extra.get("urlMedios") != null)
-                    urlMedios = extra.getString("urlMedios");
-            }
-        }
-    }
-    
-    
-    /**
-     * Defines callbacks for service binding, passed to bindService()
-     */
-    private final ServiceConnection mConnection = new ServiceConnection() {
-        
-        @Override
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            MediaService.LocalBinder binder = (MediaService.LocalBinder) service;
-            MediaService mService = binder.traerMediaService();
-            mBound = true;
-            
-            FragServicioMedio fragServicioMedio = (FragServicioMedio) getSupportFragmentManager().findFragmentById(CONTENT_VIEW_ID);
-            if (fragServicioMedio != null) {
-                
-                mService.ponerPosllamada(fragServicioMedio.mediaCallback);
-                
-                if (MediaService.esEnVivo()) {
-                    fragServicioMedio.actualizarFAB(MediaService.estadoMP);
-                } else {
-                    // TODO esto se está llamando siempre
-                    fragServicioMedio.actualizarFAB(Util.EstadoMP.detenido);
-                }
-                
-            }
-            
-        }
-        
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            mBound = false;
-        }
-        
-    };
-    
-    
-    /**
-     * Desde aca el ciclo de vida de la Actividad
-     */
-    private static final int CONTENT_VIEW_ID = R.id.contenedor_fragmento;
+    //
+    // CICLO DE VIDA DE LA ACTIVIDAD
+    //**********************************************************************************************
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,12 +51,11 @@ public class ActiPrincipal extends AppCompatActivity {
             transaction.addToBackStack(null);
             transaction.commit();
         }
-    
+        
         ActionBar ab = getSupportActionBar();
         if (ab != null)
             ab.setElevation(0);
     }
-    
     
     @Override
     protected void onStart() {
@@ -125,7 +74,6 @@ public class ActiPrincipal extends AppCompatActivity {
         manejarIntent(intent);
     }
     
-    
     @Override
     public void onBackPressed() {
         if (MediaService.reproduciendo()) {
@@ -134,10 +82,8 @@ public class ActiPrincipal extends AppCompatActivity {
             } catch (IllegalStateException e) {
                 e.printStackTrace();
             }
-        } else {
+        } else
             finish();
-        }
-        //else super.onBackPressed();
     }
     
     @Override
@@ -152,13 +98,51 @@ public class ActiPrincipal extends AppCompatActivity {
         super.onStop();
     }
     
-    
-    // Detener servicio al salir de la app
     @Override
     public void onDestroy() {
         if (!isChangingConfigurations())
             stopService(iServicio);
         super.onDestroy();
     }
+    //
+    // MÉTODOS PRINCIPALES
+    //**********************************************************************************************
+    private void manejarIntent(Intent i) {
+        if (i != null) {
+            if (i.getExtras() != null) {
+                Bundle extra = i.getExtras();
+                if (extra.get("urlMedios") != null)
+                    urlMedios = extra.getString("urlMedios");
+            }
+        }
+    }
+    //
+    // OTROS
+    //**********************************************************************************************
+    private final ServiceConnection mConnection = new ServiceConnection() {
+        
+        @Override
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            MediaService.LocalBinder binder = (MediaService.LocalBinder) service;
+            MediaService mService = binder.traerMediaService();
+            mBound = true;
+            
+            FragServicioMedio fragServicioMedio = (FragServicioMedio) getSupportFragmentManager().findFragmentById(R.id.contenedor_fragmento);
+            if (fragServicioMedio != null) {
+                mService.ponerPosllamada(fragServicioMedio.mediaCallback);
+                if (MediaService.esEnVivo())
+                    fragServicioMedio.actualizarFAB(MediaService.estadoMP);
+                else
+                    fragServicioMedio.actualizarFAB(Util.EstadoMP.detenido);// TODO esto se está llamando siempre
+            }
+            
+        }
+        
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            mBound = false;
+        }
+        
+    };
     
 }

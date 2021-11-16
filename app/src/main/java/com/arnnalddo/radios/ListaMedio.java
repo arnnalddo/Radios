@@ -28,18 +28,17 @@ import java.util.ArrayList;
 
 
 class ListaMedio extends Lista {
-    //*****************************************************************
+    //
     // PROPIEDADES
-    //*****************************************************************
+    //**********************************************************************************************
     private final String fuenteNegrita, fuenteRegular;
     private final ColorStateList colorTextoItemPrimario;
     private int selectedPos = 0;
     TypedValue outValue = new TypedValue();
     Resources.Theme tema;
-    
-    //*****************************************************************
+    //
     // CONSTRUCTORES
-    //*****************************************************************
+    //**********************************************************************************************
     ListaMedio(Context contexto, ArrayList<ItemLista> items, int totalTipoItem, DetectorDeToque itemClickListener) {
         super(contexto, items, totalTipoItem, itemClickListener);
         this.fuenteNegrita = contexto.getString(R.string.fuente_negrita);
@@ -62,10 +61,9 @@ class ListaMedio extends Lista {
                 new int[]{colorAccent, colorTer, colorPri}
         );
     }
-    
-    //*****************************************************************
+    //
     // MÉTODOS
-    //*****************************************************************
+    //**********************************************************************************************
     @NonNull
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup madre, int tipoItem) {
@@ -119,7 +117,9 @@ class ListaMedio extends Lista {
             }
         }
     }
-    
+    //
+    // OTROS
+    //**********************************************************************************************
     class ViewHolder extends Lista.ViewHolder implements View.OnClickListener {
         DetectorDeToque detectorDeToque;
         TextView tituloSeccion, nombre;

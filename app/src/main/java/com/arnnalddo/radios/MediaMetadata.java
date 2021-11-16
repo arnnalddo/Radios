@@ -19,6 +19,12 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 
+/**
+ * Created by arnaldito100 on 08/11/2021.
+ * Copyright © 2021 Arnaldo Alfredo. All rights reserved.
+ * http://www.arnnalddo.com
+ * Clase para obtener metadatos de canciones desde Spotify
+ */
 public class MediaMetadata {
     //
     // INTERFACES
@@ -26,7 +32,7 @@ public class MediaMetadata {
     interface Posllamada {
         void ponerMetadatos();
         void quitarMetadatos();
-        void error();
+        void enError();
     }
     //
     // PROPIEDADES
@@ -41,7 +47,9 @@ public class MediaMetadata {
     private String url;// url de los metadatos principales
     private boolean desdeSpotify;// para saber si cargar metadatos desde Spotify también
     // Lo que va a cambiar y es privado
+    private Timer programadorToken = null;
     private String raw, nombreCancion, nombreArtista, nombreAlbum, urlImagenAlbum;// principales
+    // Lo que se va a usar "afuera"
     protected final ScheduledExecutorService programadorDeTarea = Executors.newSingleThreadScheduledExecutor();// programador para actualizar los metadatos
     protected ScheduledFuture<?> tareaProgramada;// tarea que será ejecutada en un futuro
     //
@@ -99,7 +107,7 @@ public class MediaMetadata {
                 .setCallback((error, metadatos) -> {
                     if (error != null) {
                         this.raw = "";
-                        this.posllamada.error();
+                        this.posllamada.enError();
                         if (hayMetadatos())
                             this.restablecer();
                         error.printStackTrace();
@@ -217,7 +225,7 @@ public class MediaMetadata {
         if (spotifyOK)
             this.posllamada.ponerMetadatos();
         else {
-            this.posllamada.error();
+            this.posllamada.enError();
             if (hayMetadatos())
                 this.restablecer();
         }
@@ -254,7 +262,6 @@ public class MediaMetadata {
         this.urlImagenAlbum = null;
     }
     
-    private Timer programadorToken = null;
     private void cargarToken() {
         // No cargar si ya se obtuvo y no caducó
         if (validezToken > System.currentTimeMillis())
@@ -304,7 +311,9 @@ public class MediaMetadata {
                     
                 });
     }
-    
+    //
+    // OTROS
+    //**********************************************************************************************
     private class ProgramadorToken extends TimerTask {
         Handler handler = new Handler();
         @Override

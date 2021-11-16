@@ -36,7 +36,9 @@ import java.util.Set;
  * Medios
  */
 public class FragServicioMedio extends FragServicio implements View.OnClickListener, Lista.DetectorDeToque {
-    
+    //
+    // PROPIEDADES
+    //**********************************************************************************************
     private FloatingActionButton btnPlayStop;// botón flotante play/stop
     private Intent iMediaService;// intent para vincular con MediaService
     private Animation fab_open, fab_close, fab_rotar_ini, fab_rotar;// animaciones
@@ -47,12 +49,138 @@ public class FragServicioMedio extends FragServicio implements View.OnClickListe
     private boolean nSeccion = false;// para saber si crear o no una nueva sección en la lista
     private static final String[] campos = {"id", "nombre", "modulacion", "ciudad", "region", "logo_chico_url", "logo_grande_url", "video", "url_metadatos", "grabaciones_url", "rtsp", "rtsp_tigo", "rtsp_copaco", "hls", "hls_tigo", "hls_copaco", "vip", "whatsapp"};// nombres de campos del json a usar
     public final MediaCallback mediaCallback = new ActualizarIU();// interfaz para actualizar mi IU, según MediaService
-    
+    //
+    // CONSTRUCTORES
+    //**********************************************************************************************
     public FragServicioMedio() {}
+    //
+    // CICLO DE VIDA DEL FRAGMENTO
+    //**********************************************************************************************
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        idServicio = "0";
+        nombreServicio = "Medios";
+        // Intent para trabajar con MediaService
+        iMediaService = new Intent(contexto, MediaService.class);
+        // Animaciones
+        fab_open = AnimationUtils.loadAnimation(contexto, R.anim.fab_in);
+        fab_close = AnimationUtils.loadAnimation(contexto, R.anim.fab_out);
+        fab_rotar_ini = AnimationUtils.loadAnimation(contexto, R.anim.fab_rotar_ini);
+        fab_rotar = AnimationUtils.loadAnimation(contexto, R.anim.fab_rotar);
+        //setRetainInstance(true);// Retener fragmento en "onConfigChange()"// deprecado
+    }
     
-    /**
-     * Método para montar la Lista con los datos
-     */
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflador, ViewGroup madre, Bundle savedInstanceState) {
+        // (!) No cambiar el orden a continuación
+        
+        // Preparo la vista principal y sus objetos
+        vistaPrincipal = inflador.inflate(R.layout.frag_servicio_medio, madre, false);
+        ruedaCentro = vistaPrincipal.findViewById(R.id.ruedaCentro);
+        txtCentro = vistaPrincipal.findViewById(R.id.txtCentro);
+        btnCentro = vistaPrincipal.findViewById(R.id.btnCentro);
+        //tip = vistaPrincipal.findViewById(R.id.tip_lista);
+        TextView titulo = vistaPrincipal.findViewById(R.id.tituloPrincipal);
+        Util.cambiarFuente(contexto, contexto.getString(R.string.fuente_regular), titulo);
+        
+        // (!) Debe estar aca (por si se cambia de tema)
+        miLista = new ListaMedio(getActivity(), items, 2, this);
+        lista = vistaPrincipal.findViewById(R.id.listaMedio);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            lista.setBackground(ContextCompat.getDrawable(contexto, R.drawable.fondo_lista));
+            lista.setClipToOutline(true);
+        }
+        lista.setAdapter(miLista);
+        
+        // Botón Flotante Play/Stop
+        btnPlayStop = vistaPrincipal.findViewById(R.id.btnPlayStop);
+        btnPlayStop.setOnClickListener(this);
+        boolean mostrarFab = (savedInstanceState != null && savedInstanceState.getBoolean(Util.PREF_MOSTRAR_CONTROL_FLOTANTE_MEDIO));
+        btnPlayStop.setVisibility((mostrarFab) ? View.VISIBLE : View.INVISIBLE);
+        
+        // urlScheme
+        if (getArguments() != null && getArguments().getParcelable("url_scheme") != null)
+            urlScheme = getArguments().getParcelable("url_scheme");
+        
+        return super.onCreateView(inflador, madre, savedInstanceState);
+    }
+    
+    @Override
+    public void onSaveInstanceState(@NonNull final Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putBoolean(Util.PREF_MOSTRAR_CONTROL_FLOTANTE_MEDIO, (btnPlayStop != null && btnPlayStop.getVisibility() == View.VISIBLE));
+    }
+    
+    @Override
+    public void onClick(View v) {
+        int vId = v.getId();
+        if (vId == R.id.btnPlayStop)
+            playStop();
+    }
+    
+    @Override
+    public void enToque(int posicion) {
+        
+        if (items.get(posicion).tipoItem() != 0) {
+            
+            ItemListaMedio item = (ItemListaMedio) items.get(posicion);
+            
+            String urlTransmision = Util.obtenerURLMedio(item.url, item.urlTigo, item.urlCopaco);
+            
+            if (urlTransmision != null) {
+                
+                // Reproducir audio solo si video == "false"
+                if (!item.esVideo) {
+                    
+                    String[] ultMedioArray = {};
+                    
+                    if (contexto != null) {
+                        ultMedioArray = Util.obtPreferencia(contexto, Util.PREF_ULTIMO_MEDIO);
+                    }
+                    
+                    if (ultMedioArray.length > 0 && ultMedioArray[0].equals("00" + item.id) && MediaService.esEnVivo() && MediaService.reproduciendo()) {
+                        
+                        System.out.print(item.nombre + " ya se está reproduciendo");
+                        
+                    } else {
+                        
+                        Set<String> set = new HashSet<>();
+                        set.add("00" + item.id);
+                        set.add("01" + item.nombre);
+                        set.add("02" + item.urlLogoChico);
+                        set.add("03" + item.urlLogoGrande);
+                        set.add("04" + item.url);
+                        set.add("05" + item.urlTigo);
+                        set.add("06" + item.urlCopaco);
+                        set.add("07" + item.urlMetadatos);
+                        
+                        if (contexto != null) {
+                            
+                            // Guardar en el dispositivo la info del último medio seleccionado
+                            Util.editarPreferencia(contexto, Util.PREF_ULTIMO_MEDIO, set);
+                            
+                            // Reproducir
+                            Util.iniciarMediaService(contexto, urlTransmision, item.nombre, null, item.urlLogoGrande, item.urlMetadatos, true, true);
+                            
+                        }
+                        
+                        //lista.setItemChecked(position, true);
+                        
+                    }
+                    
+                }
+                
+            } else {
+                Toast.makeText(FragServicioMedio.this.contexto, getString(R.string.error) + ": stream_url=null", Toast.LENGTH_SHORT).show();
+            }
+            
+        }
+        
+    }
+    //
+    // MÉTODOS
+    //**********************************************************************************************
     @Override
     protected void montarLista(JsonArray matrizPrimaria) {
         // obtener el tamanio actual de items
@@ -288,9 +416,6 @@ public class FragServicioMedio extends FragServicio implements View.OnClickListe
         }
     }
     
-    /**
-     * Método para reproducir o detener el Audio
-     */
     private void playStop() {
         
         if (contexto != null) {
@@ -325,10 +450,9 @@ public class FragServicioMedio extends FragServicio implements View.OnClickListe
         }
         
     }
-    
-    /**
-     * Implementación de la Interfaz MediaCallback (para actualizar mi interfaz de usuario, según MediaService)
-     */
+    //
+    // OTROS
+    //**********************************************************************************************
     private class ActualizarIU implements MediaCallback {
         
         @Override
@@ -398,129 +522,4 @@ public class FragServicioMedio extends FragServicio implements View.OnClickListe
         
     }
     
-    @Override
-    public void onClick(View v) {
-        int vId = v.getId();
-        if (vId == R.id.btnPlayStop)
-            playStop();
-    }
-    
-    @Override
-    public void enToque(int posicion) {
-        
-        if (items.get(posicion).tipoItem() != 0) {
-            
-            ItemListaMedio item = (ItemListaMedio) items.get(posicion);
-            
-            String urlTransmision = Util.obtenerURLMedio(item.url, item.urlTigo, item.urlCopaco);
-            
-            if (urlTransmision != null) {
-                
-                // Reproducir audio solo si video == "false"
-                if (!item.esVideo) {
-                    
-                    String[] ultMedioArray = {};
-                    
-                    if (contexto != null) {
-                        ultMedioArray = Util.obtPreferencia(contexto, Util.PREF_ULTIMO_MEDIO);
-                    }
-                    
-                    if (ultMedioArray.length > 0 && ultMedioArray[0].equals("00" + item.id) && MediaService.esEnVivo() && MediaService.reproduciendo()) {
-                        
-                        System.out.print(item.nombre + " ya se está reproduciendo");
-                        
-                    } else {
-                        
-                        Set<String> set = new HashSet<>();
-                        set.add("00" + item.id);
-                        set.add("01" + item.nombre);
-                        set.add("02" + item.urlLogoChico);
-                        set.add("03" + item.urlLogoGrande);
-                        set.add("04" + item.url);
-                        set.add("05" + item.urlTigo);
-                        set.add("06" + item.urlCopaco);
-                        set.add("07" + item.urlMetadatos);
-                        
-                        if (contexto != null) {
-                            
-                            // Guardar en el dispositivo la info del último medio seleccionado
-                            Util.editarPreferencia(contexto, Util.PREF_ULTIMO_MEDIO, set);
-                            
-                            // Reproducir
-                            Util.iniciarMediaService(contexto, urlTransmision, item.nombre, null, item.urlLogoGrande, item.urlMetadatos, true, true);
-                            
-                        }
-                        
-                        //lista.setItemChecked(position, true);
-                        
-                    }
-                    
-                }
-                
-            } else {
-                Toast.makeText(FragServicioMedio.this.contexto, getString(R.string.error) + ": stream_url=null", Toast.LENGTH_SHORT).show();
-            }
-            
-        }
-        
-    }
-    
-    // -------------------------------------------------------
-    // A PARTIR DE ACA INICIA EL "CICLO DE VIDA" DEL FRAGMENTO
-    // -------------------------------------------------------
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        idServicio = "0";
-        nombreServicio = "Medios";
-        // Intent para trabajar con MediaService
-        iMediaService = new Intent(contexto, MediaService.class);
-        // Animaciones
-        fab_open = AnimationUtils.loadAnimation(contexto, R.anim.fab_in);
-        fab_close = AnimationUtils.loadAnimation(contexto, R.anim.fab_out);
-        fab_rotar_ini = AnimationUtils.loadAnimation(contexto, R.anim.fab_rotar_ini);
-        fab_rotar = AnimationUtils.loadAnimation(contexto, R.anim.fab_rotar);
-        //setRetainInstance(true);// Retener fragmento en "onConfigChange()"// deprecado
-    }
-    
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflador, ViewGroup madre, Bundle savedInstanceState) {
-        // (!) No cambiar el orden a continuación
-        
-        // Preparo la vista principal y sus objetos
-        vistaPrincipal = inflador.inflate(R.layout.frag_servicio_medio, madre, false);
-        ruedaCentro = vistaPrincipal.findViewById(R.id.ruedaCentro);
-        txtCentro = vistaPrincipal.findViewById(R.id.txtCentro);
-        btnCentro = vistaPrincipal.findViewById(R.id.btnCentro);
-        //tip = vistaPrincipal.findViewById(R.id.tip_lista);
-        TextView titulo = vistaPrincipal.findViewById(R.id.tituloPrincipal);
-        Util.cambiarFuente(contexto, contexto.getString(R.string.fuente_regular), titulo);
-        
-        // (!) Debe estar aca (por si se cambia de tema)
-        miLista = new ListaMedio(getActivity(), items, 2, this);
-        lista = vistaPrincipal.findViewById(R.id.listaMedio);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            lista.setBackground(ContextCompat.getDrawable(contexto, R.drawable.fondo_lista));
-            lista.setClipToOutline(true);
-        }
-        lista.setAdapter(miLista);
-        
-        // Botón Flotante Play/Stop
-        btnPlayStop = vistaPrincipal.findViewById(R.id.btnPlayStop);
-        btnPlayStop.setOnClickListener(this);
-        boolean mostrarFab = (savedInstanceState != null && savedInstanceState.getBoolean(Util.PREF_MOSTRAR_CONTROL_FLOTANTE_MEDIO));
-        btnPlayStop.setVisibility((mostrarFab) ? View.VISIBLE : View.INVISIBLE);
-        
-        // urlScheme
-        if (getArguments() != null && getArguments().getParcelable("url_scheme") != null)
-            urlScheme = getArguments().getParcelable("url_scheme");
-        
-        return super.onCreateView(inflador, madre, savedInstanceState);
-    }
-    
-    @Override
-    public void onSaveInstanceState(@NonNull final Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putBoolean(Util.PREF_MOSTRAR_CONTROL_FLOTANTE_MEDIO, (btnPlayStop != null && btnPlayStop.getVisibility() == View.VISIBLE));
-    }
 }

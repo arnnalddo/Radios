@@ -33,9 +33,9 @@ import java.util.ArrayList;
  */
 
 public abstract class FragServicio extends Fragment implements View.OnClickListener {
-    //*****************************************************************
+    //
     // PROPIEDADES
-    //*****************************************************************
+    //**********************************************************************************************
     // Diseño
     protected View vistaPrincipal;// vista principal
     protected ProgressBar ruedaCentro;// indicador de carga de contenido (centro)
@@ -59,15 +59,75 @@ public abstract class FragServicio extends Fragment implements View.OnClickListe
     //protected final Handler controladorIon = new Handler();// controlador para ion
     private String urlServicio;// url del json
     private JsonArray jsonTmp;// para guardar temporalmente el contenido del json (savedInstanceState) y listar después de onConfigurationChanged()
-    
-    //*****************************************************************
+    //
     // CONSTRUCTORES
-    //*****************************************************************
+    //**********************************************************************************************
     public FragServicio() {}
+    //
+    // CICLO DE VIDA DEL FRAGMENTO
+    //**********************************************************************************************
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // obtengo el contexto actual
+        contexto = getContext();
+        // Obtengo la URL del servicio a cargar, pasada por la actividad
+        if (getArguments() != null) {
+            urlServicio = getArguments().getString("urlServicio", null);
+        }// fin if
+    }
     
-    //*****************************************************************
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        System.out.println(idServicio);
+        System.out.println(nombreServicio);
+        System.out.println(urlServicio);
+        
+        // Le doy "vida" al botoncito del centro (:
+        btnCentro.setOnClickListener(this);
+        // Cambio la fuente tipográfica de los elementos del centro,
+        // para que se vean tan bonitos como yo :>
+        Util.cambiarFuente(contexto, getString(R.string.fuente_regular), txtCentro);
+        Util.cambiarFuente(contexto, getString(R.string.fuente_regular), btnCentro);
+        
+        // Si hubo error, pues muestro al usuario
+        if (hayError)
+            verError(codigoError, extraError);
+        
+        if (savedInstanceState == null || jsonTmp == null)
+            cargarDatos(urlServicio);
+        else
+            montarLista(jsonTmp);
+        
+        // ¡Bum! Poner la interfaz (del "hijo")
+        return vistaPrincipal;
+    }
+    
+    @Override
+    public void onStart() {
+        super.onStart();
+        cargarDatos(urlServicio);// TODO: atender (esto no vuelve a llamarse en onConfigChanged)
+    }
+    
+    @Override
+    public void onDestroy() {
+        // Cancelo la carga de datos si está en curso
+        if (json != null && !json.isDone() && !json.isCancelled()) {
+            json.cancel();
+            json = null;
+        }
+        super.onDestroy();// Destruir fragmento
+    }
+    
+    @Override
+    public void onClick(View v) {
+        // Cuando se pulsa el botón del centro (reintentar cargar los datos)
+        if (v.getId() == R.id.btnCentro)
+            cargarDatos(urlServicio);
+    }
+    //
     //region MÉTODOS
-    //*****************************************************************
+    //**********************************************************************************************
     /**
      * Método para obtener los Datos con ion
      * (se asume que para todos los servicios, el json contiene
@@ -218,66 +278,4 @@ public abstract class FragServicio extends Fragment implements View.OnClickListe
     }
     //endregion
     
-    //*****************************************************************
-    // CICLO DE VIDA DEL FRAGMENTO
-    //*****************************************************************
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        // obtengo el contexto actual
-        contexto = getContext();
-        // Obtengo la URL del servicio a cargar, pasada por la actividad
-        if (getArguments() != null) {
-            urlServicio = getArguments().getString("urlServicio", null);
-        }// fin if
-    }
-    
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        System.out.println(idServicio);
-        System.out.println(nombreServicio);
-        System.out.println(urlServicio);
-        
-        // Le doy "vida" al botoncito del centro (:
-        btnCentro.setOnClickListener(this);
-        // Cambio la fuente tipográfica de los elementos del centro,
-        // para que se vean tan bonitos como yo :>
-        Util.cambiarFuente(contexto, getString(R.string.fuente_regular), txtCentro);
-        Util.cambiarFuente(contexto, getString(R.string.fuente_regular), btnCentro);
-        
-        // Si hubo error, pues muestro al usuario
-        if (hayError)
-            verError(codigoError, extraError);
-    
-        if (savedInstanceState == null || jsonTmp == null)
-            cargarDatos(urlServicio);
-        else
-            montarLista(jsonTmp);
-        
-        // ¡Bum! Poner la interfaz (del "hijo")
-        return vistaPrincipal;
-    }
-    
-    @Override
-    public void onStart() {
-        super.onStart();
-        cargarDatos(urlServicio);// TODO: atender (esto no vuelve a llamarse en onConfigChanged)
-    }
-    
-    @Override
-    public void onDestroy() {
-        // Cancelo la carga de datos si está en curso
-        if (json != null && !json.isDone() && !json.isCancelled()) {
-            json.cancel();
-            json = null;
-        }
-        super.onDestroy();// Destruir fragmento
-    }
-    
-    @Override
-    public void onClick(View v) {
-        // Cuando se pulsa el botón del centro (reintentar cargar los datos)
-        if (v.getId() == R.id.btnCentro)
-            cargarDatos(urlServicio);
-    }
 }

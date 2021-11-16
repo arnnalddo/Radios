@@ -9,24 +9,22 @@ package com.arnnalddo.radios;
  */
 
 class ItemListaMedio implements ItemLista {
-    //*****************************************************************
+    //
     // PROPIEDADES
-    //*****************************************************************
+    //**********************************************************************************************
     private final int tipoItem;
     String tituloSeccion, id, region, nombre, url, urlTigo, urlCopaco, urlLogoChico, urlLogoGrande, urlMetadatos, urlGrabaciones;
     boolean esVideo;
     private boolean esPrimerItem;
-    
-    //*****************************************************************
+    //
     // CONSTRUCTORES
-    //*****************************************************************
+    //**********************************************************************************************
     ItemListaMedio(int tipoItem) {
         this.tipoItem = tipoItem;
     }
-    
-    //*****************************************************************
+    //
     // MÉTODOS
-    //*****************************************************************
+    //**********************************************************************************************
     protected void ponerTituloSeccion(String titulo) {
         this.tituloSeccion = titulo;
     }
@@ -82,7 +80,9 @@ class ItemListaMedio implements ItemLista {
     protected boolean esPrimerItem() {
         return this.esPrimerItem;
     }
-    
+    //
+    // DE LA INTERFAZ DE: ITEM LISTA
+    //**********************************************************************************************
     @Override
     public int tipoItem() {
         return this.tipoItem;

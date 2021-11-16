@@ -1,7 +1,5 @@
 package com.arnnalddo.radios;
 
-import com.arnnalddo.radios.Util.EstadoMP;
-
 import android.annotation.TargetApi;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -36,7 +34,7 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 import androidx.media.app.NotificationCompat.MediaStyle;
 
-import com.koushikdutta.async.future.Future;
+import com.arnnalddo.radios.Util.EstadoMP;
 import com.koushikdutta.ion.Ion;
 
 import java.util.Timer;
@@ -50,9 +48,9 @@ import java.util.TimerTask;
  * Servicio principal
  */
 public class MediaService extends Service implements MediaMetadata.Posllamada, AudioManager.OnAudioFocusChangeListener, MediaPlayer.OnPreparedListener, MediaPlayer.OnErrorListener, MediaPlayer.OnCompletionListener {
-    //*****************************************************************
+    //
     // PROPIEDADES
-    //*****************************************************************
+    //**********************************************************************************************
     // (!) Cosas que no deben cambiar (para intents explícitas)
     public static final String ACCION_PREPARAR = BuildConfig.APPLICATION_ID + ".accionPreparar";
     public static final String ACCION_PLAY = BuildConfig.APPLICATION_ID + ".accionPlay";
@@ -92,6 +90,11 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
     private NotificationCompat.Builder notificationBuilder;// para mostrar notificaciones al usuario en el área de notificaciones
     private PendingIntent piNotificacion, piPlayStopRepro, piCerrar;
     private RemoteViews vistaNotificacionPrincipal, vistaNotificacionPrincipalGrande;// vistas principales para la notificación personalizada
+    // Para la notificación
+    private static RemoteViews[] vistas;
+    private static String[] metodos;
+    private static int[] idVistas;
+    private MediaStyle mediaStyle;
     // Otras
     public static EstadoMP estadoMP = EstadoMP.detenido;
     private static MediaPlayer mediaPlayer;
@@ -107,7 +110,279 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
     private Timer temporizadorNoti = null;
     private Timer temporizadorAS = null;
     private final IBinder mBinder = new LocalBinder();
+    //
+    // CICLO DE VIDA DEL SERVICIO
+    //**********************************************************************************************
+    @Override
+    public void onCreate() {
+        System.out.println("MediaService creado.");
+        // Acciones principales
+        IntentFilter accion = new IntentFilter();
+        accion.addAction(ACCION_PREPARAR);
+        accion.addAction(ACCION_PLAY);
+        accion.addAction(ACCION_PAUSE);
+        accion.addAction(ACCION_STOP);
+        accion.addAction(ACCION_PLAY_STOP);
+        // Acción para programar detención automática de reproducción
+        accion.addAction(ACCION_AUTO_STOP);
+        // Acción para notificar al usuario
+        accion.addAction(ACCION_NOTIFICAR);
+        // Acción para cerrar la aplicación desde la notificación
+        accion.addAction(ACCION_CERRAR);
+        // Acción para controlar el audio con los auriculares
+        accion.addAction(Intent.ACTION_HEADSET_PLUG);
+        // Acción para detectar el enfoque de audio
+        accion.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
+        // Acción para detectar la activación del modo ahorro de batería
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+            accion.addAction("android.os.action.POWER_SAVE_MODE_CHANGED");
+        // Le doy prioridad máxima...
+        accion.setPriority(Integer.MAX_VALUE);
+        // y registro mi receptor de acciones
+        registerReceiver(receptor, accion);
+        
+        // Valor predeterminado para el título (notificacion y otras cosas)
+        medioNombre = getString(R.string.appNombre);
+        
+        // Inicializo lo básico para la reproducción de audio en segundo plano
+        Context contexto = getApplicationContext();
+        audioManager = (AudioManager) contexto.getSystemService(Context.AUDIO_SERVICE);
+        PowerManager powerManager = (PowerManager) contexto.getSystemService(POWER_SERVICE);
+        WifiManager wifiManager = (WifiManager) contexto.getSystemService(Context.WIFI_SERVICE);
+        notificationManager = (NotificationManager) contexto.getSystemService(NOTIFICATION_SERVICE);
+        mediaMetadataBuilder = new MediaMetadataCompat.Builder();
+        
+        // Creo una intent o acción para cuando el usuario toca la notificacion:
+        Intent toqueNotifi = new Intent(this, (esEnVivo) ? ActiPrincipal.class : ActiPrincipal.class);
+        toqueNotifi.putExtra("desdeServicio", true);
+        toqueNotifi.setAction(Intent.ACTION_MAIN);
+        toqueNotifi.addCategory(Intent.CATEGORY_LAUNCHER);
+        this.piNotificacion = PendingIntent.getActivity(this, 0, toqueNotifi, 0);
+        // Creo una intent o acción para cuando el usuario toca el Botón Play/Stop o Play/Pause
+        Intent iPlayStop = new Intent(ACCION_PLAY_STOP);
+        this.piPlayStopRepro = PendingIntent.getBroadcast(this, 0, iPlayStop, PendingIntent.FLAG_UPDATE_CURRENT);
+        // Creo una intent o acción para cuando el usuario toca el botón Cerrar
+        Intent iCerrar = new Intent(ACCION_CERRAR);
+        this.piCerrar = PendingIntent.getBroadcast(this, 0, iCerrar, PendingIntent.FLAG_ONE_SHOT);
+        
+        this.playbackStateBuilder = new PlaybackStateCompat.Builder();
+        this.playbackStateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_STOP);
+        
+        if (powerManager != null)
+            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, ETIQUETA + ":wakelock");
+        if (wifiManager != null)
+            wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, ETIQUETA + ":wifilock");
+    }
     
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        // Si no hay intents, inicio el servicio y "salgo" de acá, pero
+        // no quiero reiniciarlo después de destruirlo (START_NOT_STICKY)
+        if (intent == null)
+            return START_NOT_STICKY;
+        
+        // Obtengo la URL de transmisión
+        if (intent.getStringExtra(MEDIO_URL) != null)
+            medioURL = intent.getStringExtra(MEDIO_URL);
+        
+        // Obtengo el nombre del medio
+        if (intent.getStringExtra(MEDIO_NOMBRE) != null)
+            medioNombre = intent.getStringExtra(MEDIO_NOMBRE);
+        
+        // Obtengo el subtítulo o detalle del medio
+        if (intent.getStringExtra(MEDIO_DETALLE) != null)
+            medioDetalle = intent.getStringExtra(MEDIO_DETALLE);
+        else if (medioDetalle == null)
+            medioDetalle = getString(R.string.nodisponible_txt);
+        
+        // Obtengo la imagen del medio si se obtuvo una URL
+        if (intent.getStringExtra(MEDIO_URL_IMAGEN) != null) {
+            String medioURLLogo = intent.getStringExtra(MEDIO_URL_IMAGEN);
+            cargarImagen(medioURLLogo, true);
+        }
+        
+        // Obtengo la URL de donde se obtienen los metadatos de las canciones (beta)
+        if (intent.getStringExtra(MEDIO_URL_METADATOS) != null) {
+            medioURLMetadatos = intent.getStringExtra(MEDIO_URL_METADATOS);
+        }
+        
+        // Obtengo el valor de la variable enVivo para saber si es un medio en vivo o no
+        esEnVivo = intent.getBooleanExtra(EN_VIVO, esEnVivo);
+        
+        // Manejo las intents de acciones recibidas para saber qué hacer
+        manejarIntent(intent);
+        return START_NOT_STICKY;
+    }
+    
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+    
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        if (notiVisible)
+            notificar(estadoMP);
+    }
+    
+    @Override
+    public void onDestroy() {
+        System.out.println("Destruyendo MediaService...");
+        cancelarDetencion();
+        borrarNotificacion(0);
+        cancelarTempNoti();
+        liberarCosas(true);
+        unregisterReceiver(receptor);
+        if (this.mediaMetadata != null && this.mediaMetadata.programadorDeTarea != null)
+            this.mediaMetadata.programadorDeTarea.shutdown();
+        super.onDestroy();
+    }
+    //
+    // DE LA INTERFAZ DE: MEDIA PLAYER
+    //**********************************************************************************************
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        // mediaPlayer preparadísimo, reproducir
+        reproducir(false);
+    }
+    
+    @Override
+    public boolean onError(MediaPlayer mp, int what, int extra) {
+        System.out.println("Error de reproducción.");
+        if (mediaCallback != null)
+            mediaCallback.error();
+        // Debe estar antes de detener()
+        estadoMP = EstadoMP.error;
+        detener();
+        return true;// Si hay error, no es necesario llamar a onCompletionListener, por eso: true (?)
+    }
+    
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        System.out.println("Reproducción finalizada.");
+        // Debe estar antes de detener()
+        estadoMP = EstadoMP.finalizado;
+        if (mediaCallback != null)
+            mediaCallback.finalizado();
+        detener();
+        
+    }
+    //
+    // DE LA INTERFAZ DE: AUDIO FOCUS
+    //**********************************************************************************************
+    @Override
+    public void onAudioFocusChange(int enfoque) {
+        switch (enfoque) {
+            case AudioManager.AUDIOFOCUS_GAIN:
+                System.out.println("Gané el enfoque de audio.");
+                // Si se está reproduciendo
+                if (reproduciendo() && mediaPlayer != null)
+                    mediaPlayer.setVolume(1.0f, 1.0f);// aumento el volumen
+                else if (estadoMP == EstadoMP.pausado)// si se pausó la reproducción...
+                    reproducir(false);// ...vuelvo a reproducir
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS:
+                System.out.println("¡Uy! Perdí el enfoque de audio por largo tiempo.");
+                //if (reproduciendo()) {
+                //if (esEnVivo)
+                //manejarEnfoque(true);
+                detener();// debe estar después de manejarFocoAudio()
+                //}
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
+                // Esto también se cumple si se recibe llamada en algunos dispositivos
+                System.out.println("Perdí el enfoque de audio por tiempo limitado.");
+                if (reproduciendo())
+                    detener();// pausa si no es en vivo
+                break;
+            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
+                System.out.println("Perdí el enfoque de audio solo un rato, reduzco el volumen.");
+                if (reproduciendo() && mediaPlayer != null)
+                    mediaPlayer.setVolume(0.1f, 0.1f);
+                break;
+        }
+    }
+    //
+    // DE LA INTERFAZ DE: MEDIA METADATA
+    //**********************************************************************************************
+    @Override
+    public void ponerMetadatos() {
+        if (mediaSession != null && mediaMetadataBuilder != null) {
+            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, this.mediaMetadata.traerCancion());
+            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM, this.mediaMetadata.traerArtista());
+            mediaSession.setMetadata(mediaMetadataBuilder.build());
+        }
+        // Actualizo los datos de la notificación
+        if (notificationBuilder != null) {
+            // Obligatorios (aun sin vistas personalizadas):
+            notificationBuilder.setContentTitle(this.mediaMetadata.traerCancion());
+            notificationBuilder.setContentText(this.mediaMetadata.traerArtista());
+            // Con vistas personalizadas:
+            if (usarVistaPersonalizada && vistaNotificacionPrincipal != null && vistaNotificacionPrincipalGrande != null) {
+                vistaNotificacionPrincipal.setTextViewText(R.id.tituloNotificacion, this.mediaMetadata.traerCancion());
+                vistaNotificacionPrincipal.setTextViewText(R.id.subtituloNotificacion, this.mediaMetadata.traerArtista());
+                vistaNotificacionPrincipalGrande.setTextViewText(R.id.tituloNotificacion, this.mediaMetadata.traerCancion());
+                vistaNotificacionPrincipalGrande.setTextViewText(R.id.subtituloNotificacion, this.mediaMetadata.traerArtista());
+            }
+            notificationManager.notify(idNotifiRepro, notificationBuilder.build());
+        }
+        cargarImagen(this.mediaMetadata.traerURLImagen(), false);
+    }
+    
+    @Override
+    public void quitarMetadatos() {
+        System.out.println("Quitando metadatos...");
+        String subtitulo;
+        Bitmap imagen = (medioLogo != null) ? medioLogo : BitmapFactory.decodeResource(getResources(), R.drawable.no_logo);
+        switch (estadoMP) {
+            case conectando:
+                subtitulo = (esEnVivo) ? getString(R.string.conectando_msj) : medioDetalle;
+                break;
+            case almacenando:
+                subtitulo = (esEnVivo) ? getString(R.string.almacenando_msj) : medioDetalle;
+                break;
+            case reproduciendo:
+                subtitulo = (esEnVivo) ? getString(R.string.envivo_msj) : medioDetalle;
+                break;
+            default:
+                subtitulo = (esEnVivo) ? getString(R.string.desconectado_msj) : medioDetalle;
+                break;
+        }
+        if (mediaSession != null && mediaMetadataBuilder != null) {
+            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, medioNombre);
+            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM, subtitulo);
+            mediaMetadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, imagen);
+            mediaSession.setMetadata(mediaMetadataBuilder.build());
+        }
+        // Actualizo los datos de la notificación
+        if (notificationBuilder != null) {
+            // Obligatorios (aun sin vistas personalizadas):
+            notificationBuilder.setContentTitle(medioNombre);
+            notificationBuilder.setContentText(subtitulo);
+            if (usarVistaPersonalizada && vistaNotificacionPrincipal != null && vistaNotificacionPrincipalGrande != null) {
+                vistaNotificacionPrincipal.setTextViewText(R.id.tituloNotificacion, medioNombre);
+                vistaNotificacionPrincipal.setTextViewText(R.id.subtituloNotificacion, subtitulo);
+                vistaNotificacionPrincipal.setImageViewBitmap(R.id.imagenNotificacion, imagen);
+                vistaNotificacionPrincipalGrande.setTextViewText(R.id.tituloNotificacion, medioNombre);
+                vistaNotificacionPrincipalGrande.setTextViewText(R.id.subtituloNotificacion, subtitulo);
+                vistaNotificacionPrincipalGrande.setImageViewBitmap(R.id.imagenNotificacion, imagen);
+            } else {
+                notificationBuilder.setLargeIcon(imagen);
+            }
+            notificationManager.notify(idNotifiRepro, notificationBuilder.build());
+        }
+        
+    }
+    
+    @Override
+    public void enError() {
+        if (this.mediaMetadata.hayMetadatos())
+            quitarMetadatos();
+    }
+    //
+    // MÉTODOS PRINCIPALES
+    //**********************************************************************************************
     private void manejarIntent(Intent intent) {
         // Si no hay intent o acción, salgo de acá
         if (intent == null || intent.getAction() == null)
@@ -234,7 +509,7 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
                 if (this.mediaMetadata != null)
                     this.mediaMetadata.cancelarActualizacion(true);// debe estar acá
             }
-    
+            
             // Instanciar MediaMetadata y cargar un nuevo token si necesario
             this.mediaMetadata = new MediaMetadata(this, this, medioURLMetadatos, true);
             
@@ -258,7 +533,7 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
             
             // Debe estar después del resto
             urlMedioAnterior = medioURL;
-    
+            
             System.out.println("Reproduciendo");
             mediaPlayer.start();
         }
@@ -325,43 +600,38 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
             Util.editarPreferencia(MediaService.this, "AUTOSTOP", 0L);
     }
     
-    Future<Bitmap> ionImagen;
     private void cargarImagen(@NonNull String url, boolean esLogo) {
         System.out.println("Cargando " + ((esLogo) ? "logo" : "imagen del álbum") + "...");
-        ionImagen = Ion.with(this)
-                            .load(url)
-                            .asBitmap();
-        ionImagen.setCallback((e, nuevaImagen) -> {
-            if (e != null) {
-                System.out.println("No se pudo cargar la imagen" + ((esLogo) ? ", pongo la predeterminada." : ". " + e.getLocalizedMessage()));
-                nuevaImagen = esLogo || medioLogo == null ? BitmapFactory.decodeResource(getResources(), R.drawable.no_logo) : medioLogo;
-            }
-            // Actualizo la bandera del logo del medio si se trata de logo
-            if (esLogo)
-                medioLogo = nuevaImagen;
-            // Actualizo la imagen de mediaSession
-            if (mediaSession != null && mediaMetadataBuilder != null) {
-                mediaMetadataBuilder.putBitmap(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM_ART, nuevaImagen);
-                mediaSession.setMetadata(mediaMetadataBuilder.build());
-            }
-            // Actualizo la imagen de la notificación
-            if (notificationBuilder != null) {
-                if (usarVistaPersonalizada && vistaNotificacionPrincipal != null && vistaNotificacionPrincipalGrande != null) {
-                    vistaNotificacionPrincipal.setImageViewBitmap(R.id.imagenNotificacion, nuevaImagen);
-                    vistaNotificacionPrincipalGrande.setImageViewBitmap(R.id.imagenNotificacion, nuevaImagen);
-                } else {
-                    notificationBuilder.setLargeIcon(nuevaImagen);
-                }
-                notificationManager.notify(idNotifiRepro, notificationBuilder.build());
-            }
-            System.out.println("Listo (:");
-        });// fin ion
+        Ion.with(this)
+                .load(url)
+                .asBitmap()
+                .setCallback((e, nuevaImagen) -> {
+                    if (e != null) {
+                        System.out.println("No se pudo cargar la imagen" + ((esLogo) ? ", pongo la predeterminada." : ". " + e.getLocalizedMessage()));
+                        nuevaImagen = esLogo || medioLogo == null ? BitmapFactory.decodeResource(getResources(), R.drawable.no_logo) : medioLogo;
+                    }
+                    // Actualizo la bandera del logo del medio si se trata de logo
+                    if (esLogo)
+                        medioLogo = nuevaImagen;
+                    // Actualizo la imagen de mediaSession
+                    if (mediaSession != null && mediaMetadataBuilder != null) {
+                        mediaMetadataBuilder.putBitmap(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM_ART, nuevaImagen);
+                        mediaSession.setMetadata(mediaMetadataBuilder.build());
+                    }
+                    // Actualizo la imagen de la notificación
+                    if (notificationBuilder != null) {
+                        if (usarVistaPersonalizada && vistaNotificacionPrincipal != null && vistaNotificacionPrincipalGrande != null) {
+                            vistaNotificacionPrincipal.setImageViewBitmap(R.id.imagenNotificacion, nuevaImagen);
+                            vistaNotificacionPrincipalGrande.setImageViewBitmap(R.id.imagenNotificacion, nuevaImagen);
+                        } else {
+                            notificationBuilder.setLargeIcon(nuevaImagen);
+                        }
+                        notificationManager.notify(idNotifiRepro, notificationBuilder.build());
+                    }
+                    System.out.println("Listo (:");
+                });// fin ion
     }
     
-    private static RemoteViews[] vistas;
-    private static String[] metodos;
-    private static int[] idVistas;
-    private MediaStyle mediaStyle;
     private void notificar(EstadoMP estado) {
         // Actualizo mi bandera
         estadoMP = estado;
@@ -374,7 +644,7 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
                 mediaSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
             }
-            mediaSession.setCallback(mMediaSessionCallback);
+            mediaSession.setCallback(this.mMediaSessionCallback);
             try {
                 mediaSession.setActive(true);
             } catch (NullPointerException e) {
@@ -733,82 +1003,9 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
     public void ponerPosllamada(MediaCallback posllamada) {
         this.mediaCallback = posllamada;
     }
-    
-    @Override
-    public void ponerMetadatos() {
-        if (mediaSession != null && mediaMetadataBuilder != null) {
-            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, this.mediaMetadata.traerCancion());
-            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM, this.mediaMetadata.traerArtista());
-            mediaSession.setMetadata(mediaMetadataBuilder.build());
-        }
-        // Actualizo los datos de la notificación
-        if (notificationBuilder != null) {
-            // Obligatorios (aun sin vistas personalizadas):
-            notificationBuilder.setContentTitle(this.mediaMetadata.traerCancion());
-            notificationBuilder.setContentText(this.mediaMetadata.traerArtista());
-            // Con vistas personalizadas:
-            if (usarVistaPersonalizada && vistaNotificacionPrincipal != null && vistaNotificacionPrincipalGrande != null) {
-                vistaNotificacionPrincipal.setTextViewText(R.id.tituloNotificacion, this.mediaMetadata.traerCancion());
-                vistaNotificacionPrincipal.setTextViewText(R.id.subtituloNotificacion, this.mediaMetadata.traerArtista());
-                vistaNotificacionPrincipalGrande.setTextViewText(R.id.tituloNotificacion, this.mediaMetadata.traerCancion());
-                vistaNotificacionPrincipalGrande.setTextViewText(R.id.subtituloNotificacion, this.mediaMetadata.traerArtista());
-            }
-            notificationManager.notify(idNotifiRepro, notificationBuilder.build());
-        }
-        cargarImagen(this.mediaMetadata.traerURLImagen(), false);
-    }
-    
-    @Override
-    public void quitarMetadatos() {
-        System.out.println("Quitando metadatos...");
-        String subtitulo;
-        Bitmap imagen = (medioLogo != null) ? medioLogo : BitmapFactory.decodeResource(getResources(), R.drawable.no_logo);
-        switch (estadoMP) {
-            case conectando:
-                subtitulo = (esEnVivo) ? getString(R.string.conectando_msj) : medioDetalle;
-                break;
-            case almacenando:
-                subtitulo = (esEnVivo) ? getString(R.string.almacenando_msj) : medioDetalle;
-                break;
-            case reproduciendo:
-                subtitulo = (esEnVivo) ? getString(R.string.envivo_msj) : medioDetalle;
-                break;
-            default:
-                subtitulo = (esEnVivo) ? getString(R.string.desconectado_msj) : medioDetalle;
-                break;
-        }
-        if (mediaSession != null && mediaMetadataBuilder != null) {
-            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_TITLE, medioNombre);
-            mediaMetadataBuilder.putString(android.support.v4.media.MediaMetadataCompat.METADATA_KEY_ALBUM, subtitulo);
-            mediaMetadataBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, imagen);
-            mediaSession.setMetadata(mediaMetadataBuilder.build());
-        }
-        // Actualizo los datos de la notificación
-        if (notificationBuilder != null) {
-            // Obligatorios (aun sin vistas personalizadas):
-            notificationBuilder.setContentTitle(medioNombre);
-            notificationBuilder.setContentText(subtitulo);
-            if (usarVistaPersonalizada && vistaNotificacionPrincipal != null && vistaNotificacionPrincipalGrande != null) {
-                vistaNotificacionPrincipal.setTextViewText(R.id.tituloNotificacion, medioNombre);
-                vistaNotificacionPrincipal.setTextViewText(R.id.subtituloNotificacion, subtitulo);
-                vistaNotificacionPrincipal.setImageViewBitmap(R.id.imagenNotificacion, imagen);
-                vistaNotificacionPrincipalGrande.setTextViewText(R.id.tituloNotificacion, medioNombre);
-                vistaNotificacionPrincipalGrande.setTextViewText(R.id.subtituloNotificacion, subtitulo);
-                vistaNotificacionPrincipalGrande.setImageViewBitmap(R.id.imagenNotificacion, imagen);
-            } else {
-                notificationBuilder.setLargeIcon(imagen);
-            }
-            notificationManager.notify(idNotifiRepro, notificationBuilder.build());
-        }
-        
-    }
-    
-    @Override
-    public void error() {
-        if (this.mediaMetadata.hayMetadatos())
-            quitarMetadatos();
-    }
-    
+    //
+    // OTROS
+    //**********************************************************************************************
     private class TemporizadorNoti extends TimerTask {
         Handler h = new Handler();
         @Override
@@ -867,195 +1064,6 @@ public class MediaService extends Service implements MediaMetadata.Posllamada, A
         MediaService traerMediaService() {
             return MediaService.this;
         }
-    }
-    
-    public void onAudioFocusChange(int enfoque) {
-        switch (enfoque) {
-            case AudioManager.AUDIOFOCUS_GAIN:
-                System.out.println("Gané el enfoque de audio.");
-                // Si se está reproduciendo
-                if (reproduciendo() && mediaPlayer != null)
-                    mediaPlayer.setVolume(1.0f, 1.0f);// aumento el volumen
-                else if (estadoMP == EstadoMP.pausado)// si se pausó la reproducción...
-                    reproducir(false);// ...vuelvo a reproducir
-                break;
-            case AudioManager.AUDIOFOCUS_LOSS:
-                System.out.println("¡Uy! Perdí el enfoque de audio por largo tiempo.");
-                //if (reproduciendo()) {
-                //if (esEnVivo)
-                //manejarEnfoque(true);
-                detener();// debe estar después de manejarFocoAudio()
-                //}
-                break;
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
-                // Esto también se cumple si se recibe llamada en algunos dispositivos
-                System.out.println("Perdí el enfoque de audio por tiempo limitado.");
-                if (reproduciendo())
-                    detener();// pausa si no es en vivo
-                break;
-            case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK:
-                System.out.println("Perdí el enfoque de audio solo un rato, reduzco el volumen.");
-                if (reproduciendo() && mediaPlayer != null)
-                    mediaPlayer.setVolume(0.1f, 0.1f);
-                break;
-        }
-    }
-    
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        // mediaPlayer preparadísimo, reproducir
-        reproducir(false);
-    }
-    
-    @Override
-    public boolean onError(MediaPlayer mp, int what, int extra) {
-        System.out.println("Error de reproducción.");
-        if (mediaCallback != null)
-            mediaCallback.error();
-        // Debe estar antes de detener()
-        estadoMP = EstadoMP.error;
-        detener();
-        return true;// Si hay error, no es necesario llamar a onCompletionListener, por eso: true (?)
-    }
-    
-    @Override
-    public void onCompletion(MediaPlayer mp) {
-        System.out.println("Reproducción finalizada.");
-        // Debe estar antes de detener()
-        estadoMP = EstadoMP.finalizado;
-        if (mediaCallback != null)
-            mediaCallback.finalizado();
-        detener();
-        
-    }
-    
-    //*****************************************************************
-    // CICLO DE VIDA DEL SERVICIO
-    //*****************************************************************
-    @Override
-    public void onCreate() {
-        System.out.println("MediaService creado.");
-        // Acciones principales
-        IntentFilter accion = new IntentFilter();
-        accion.addAction(ACCION_PREPARAR);
-        accion.addAction(ACCION_PLAY);
-        accion.addAction(ACCION_PAUSE);
-        accion.addAction(ACCION_STOP);
-        accion.addAction(ACCION_PLAY_STOP);
-        // Acción para programar detención automática de reproducción
-        accion.addAction(ACCION_AUTO_STOP);
-        // Acción para notificar al usuario
-        accion.addAction(ACCION_NOTIFICAR);
-        // Acción para cerrar la aplicación desde la notificación
-        accion.addAction(ACCION_CERRAR);
-        // Acción para controlar el audio con los auriculares
-        accion.addAction(Intent.ACTION_HEADSET_PLUG);
-        // Acción para detectar el enfoque de audio
-        accion.addAction(AudioManager.ACTION_AUDIO_BECOMING_NOISY);
-        // Acción para detectar la activación del modo ahorro de batería
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
-            accion.addAction("android.os.action.POWER_SAVE_MODE_CHANGED");
-        // Le doy prioridad máxima...
-        accion.setPriority(Integer.MAX_VALUE);
-        // y registro mi receptor de acciones
-        registerReceiver(receptor, accion);
-        
-        // Valor predeterminado para el título (notificacion y otras cosas)
-        medioNombre = getString(R.string.appNombre);
-        
-        // Inicializo lo básico para la reproducción de audio en segundo plano
-        Context contexto = getApplicationContext();
-        audioManager = (AudioManager) contexto.getSystemService(Context.AUDIO_SERVICE);
-        PowerManager powerManager = (PowerManager) contexto.getSystemService(POWER_SERVICE);
-        WifiManager wifiManager = (WifiManager) contexto.getSystemService(Context.WIFI_SERVICE);
-        notificationManager = (NotificationManager) contexto.getSystemService(NOTIFICATION_SERVICE);
-        mediaMetadataBuilder = new MediaMetadataCompat.Builder();
-        
-        // Creo una intent o acción para cuando el usuario toca la notificacion:
-        Intent toqueNotifi = new Intent(this, (esEnVivo) ? ActiPrincipal.class : ActiPrincipal.class);
-        toqueNotifi.putExtra("desdeServicio", true);
-        toqueNotifi.setAction(Intent.ACTION_MAIN);
-        toqueNotifi.addCategory(Intent.CATEGORY_LAUNCHER);
-        this.piNotificacion = PendingIntent.getActivity(this, 0, toqueNotifi, 0);
-        // Creo una intent o acción para cuando el usuario toca el Botón Play/Stop o Play/Pause
-        Intent iPlayStop = new Intent(ACCION_PLAY_STOP);
-        this.piPlayStopRepro = PendingIntent.getBroadcast(this, 0, iPlayStop, PendingIntent.FLAG_UPDATE_CURRENT);
-        // Creo una intent o acción para cuando el usuario toca el botón Cerrar
-        Intent iCerrar = new Intent(ACCION_CERRAR);
-        this.piCerrar = PendingIntent.getBroadcast(this, 0, iCerrar, PendingIntent.FLAG_ONE_SHOT);
-        
-        this.playbackStateBuilder = new PlaybackStateCompat.Builder();
-        this.playbackStateBuilder.setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE | PlaybackStateCompat.ACTION_PLAY | PlaybackStateCompat.ACTION_PAUSE | PlaybackStateCompat.ACTION_STOP);
-        
-        if (powerManager != null)
-            wakeLock = powerManager.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, ETIQUETA + ":wakelock");
-        if (wifiManager != null)
-            wifiLock = wifiManager.createWifiLock(WifiManager.WIFI_MODE_FULL, ETIQUETA + ":wifilock");
-    }
-    
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        // Si no hay intents, inicio el servicio y "salgo" de acá, pero
-        // no quiero reiniciarlo después de destruirlo (START_NOT_STICKY)
-        if (intent == null)
-            return START_NOT_STICKY;
-        
-        // Obtengo la URL de transmisión
-        if (intent.getStringExtra(MEDIO_URL) != null)
-            medioURL = intent.getStringExtra(MEDIO_URL);
-        
-        // Obtengo el nombre del medio
-        if (intent.getStringExtra(MEDIO_NOMBRE) != null)
-            medioNombre = intent.getStringExtra(MEDIO_NOMBRE);
-        
-        // Obtengo el subtítulo o detalle del medio
-        if (intent.getStringExtra(MEDIO_DETALLE) != null)
-            medioDetalle = intent.getStringExtra(MEDIO_DETALLE);
-        else if (medioDetalle == null)
-            medioDetalle = getString(R.string.nodisponible_txt);
-        
-        // Obtengo la imagen del medio si se obtuvo una URL
-        if (intent.getStringExtra(MEDIO_URL_IMAGEN) != null) {
-            String medioURLLogo = intent.getStringExtra(MEDIO_URL_IMAGEN);
-            cargarImagen(medioURLLogo, true);
-        }
-        
-        // Obtengo la URL de donde se obtienen los metadatos de las canciones (beta)
-        if (intent.getStringExtra(MEDIO_URL_METADATOS) != null) {
-            medioURLMetadatos = intent.getStringExtra(MEDIO_URL_METADATOS);
-        }
-        
-        // Obtengo el valor de la variable enVivo para saber si es un medio en vivo o no
-        esEnVivo = intent.getBooleanExtra(EN_VIVO, esEnVivo);
-        
-        // Manejo las intents de acciones recibidas para saber qué hacer
-        manejarIntent(intent);
-        return START_NOT_STICKY;
-    }
-    
-    @Override
-    public IBinder onBind(Intent intent) {
-        return mBinder;
-    }
-    
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        if (notiVisible)
-            notificar(estadoMP);
-    }
-    
-    @Override
-    public void onDestroy() {
-        System.out.println("Destruyendo MediaService...");
-        cancelarDetencion();
-        borrarNotificacion(0);
-        cancelarTempNoti();
-        liberarCosas(true);
-        unregisterReceiver(receptor);
-        if (this.mediaMetadata != null && this.mediaMetadata.programadorDeTarea != null)
-            this.mediaMetadata.programadorDeTarea.shutdown();
-        super.onDestroy();
     }
     
 }

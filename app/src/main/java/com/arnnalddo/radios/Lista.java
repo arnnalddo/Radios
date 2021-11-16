@@ -22,9 +22,9 @@ import java.util.ArrayList;
 
 
 public abstract class Lista extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
-    //*****************************************************************
+    //
     // INTERFACES
-    //*****************************************************************
+    //**********************************************************************************************
     // Para detectar el toque en el ítem
     protected interface DetectorDeToque {
         void enToque(int posicion);
@@ -33,10 +33,9 @@ public abstract class Lista extends RecyclerView.Adapter<RecyclerView.ViewHolder
     protected interface DetectorDeToqueLargo {
         boolean enToqueLargo(int posicion);
     }
-    
-    //*****************************************************************
+    //
     // PROPIEDADES
-    //*****************************************************************
+    //**********************************************************************************************
     // Contexto donde se muestra la lista
     protected final Context contexto;
     // «Inflador» del disenio
@@ -49,10 +48,9 @@ public abstract class Lista extends RecyclerView.Adapter<RecyclerView.ViewHolder
     protected DetectorDeToque detectorDeToque;
     // Interfaz para detectar el toque prolongado en el ítem
     protected DetectorDeToqueLargo detectorDeToqueLargo;
-    
-    //*****************************************************************
+    //
     // CONSTRUCTORES
-    //*****************************************************************
+    //**********************************************************************************************
     Lista(Context contexto, ArrayList<ItemLista> items, int totalTipoItem, DetectorDeToque itemClickListener, DetectorDeToqueLargo itemLongClickListener) {
         super();
         this.contexto = contexto;
@@ -79,10 +77,9 @@ public abstract class Lista extends RecyclerView.Adapter<RecyclerView.ViewHolder
         this.totalTipoItem = totalTipoItem;
         this.inflater = LayoutInflater.from(contexto);
     }
-    
-    //*****************************************************************
+    //
     // MÉTODOS
-    //*****************************************************************
+    //**********************************************************************************************
     // Para obtener el tipo de ítem
     @Override
     public int getItemViewType(int position) {

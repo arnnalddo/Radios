@@ -29,9 +29,9 @@ import java.io.StringReader;
  * Actividad de "arranque"
  */
 public class ActiInicio extends AppCompatActivity implements View.OnClickListener {
-    //*****************************************************************
+    //
     // PROPIEDADES
-    //*****************************************************************
+    //**********************************************************************************************
     private Future<String> json;// future para cargar la configuración de la app (json) con ion
     private Intent iActiPrincipal;// intent para iniciar ActiPrincipal
     private final Handler controladorIon = new Handler();// controlador para ion
@@ -40,10 +40,9 @@ public class ActiInicio extends AppCompatActivity implements View.OnClickListene
             "verGDPR", "urlFacebook", "urlTwitter", "urlInstagram", "urlTienda",
             "urlMedios", "urlNoticias", "urlCotizacion", "urlClima",
             "urlCine", "urlHoroscopo", "urlFutbol"};// nombres de campos del json a usar
-    
-    //*****************************************************************
+    //
     // MÉTODOS
-    //*****************************************************************
+    //**********************************************************************************************
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
